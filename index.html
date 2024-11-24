@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#2c1810">
+    <title>The Parchments of Macondo</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlRoZSBQYXJjaG1lbnRzIG9mIE1hY29uZG8iLAogICJzaG9ydF9uYW1lIjogIk1hY29uZG8iLAogICJ0aGVtZV9jb2xvciI6ICIjMmMxODEwIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMWExYTFhIiwKICAiZGlzcGxheSI6ICJmdWxsc2NyZWVuIiwKICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiCn0=">
+    
+    <style>
+        /* CSS Reset and Variables */
+        :root {
+            --parchment: #f4e4bc;
+            --ink: #2c1810;
+            --gold: #bf9b30;
+            --shadow: rgba(0, 0, 0, 0.2);
+            --text-primary: #2c1810;
+            --text-secondary: #666;
+            --animation-speed: 0.3s;
+            --background-color: #1a1a1a;
+            --button-hover: #d4af37;
+            --button-active: #bf9b30;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        /* Typography */
+        @font-face {
+            font-family: 'MacondoFont';
+            src: local('Georgia');
+            font-display: swap;
+        }
+
+        /* Base Styles */
+        html {
+            font-size: 16px;
+            height: -webkit-fill-available;
+        }
+
+        body {
+            font-family: 'MacondoFont', Georgia, serif;
+            background: var(--background-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            touch-action: none;
+        }
+
+        /* Layout */
+        #game-container {
+            display: grid;
+            width: 100vw;
+            height: 100vh;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 3fr) minmax(0, 1fr);
+            grid-template-rows: auto 1fr auto;
+        }
+
+        /* Header Styles */
+        #header {
+            grid-column: 1 / -1;
+            background: var(--ink);
+            color: var(--parchment);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 10px var(--shadow);
+            z-index: 100;
+        }
+
+        #header h1 {
+            font-size: clamp(1.5rem, 4vw, 2.5rem);
+            font-style: italic;
+        }
+
+        /* Family Tree Panel */
+        #family-tree {
+            grid-column: 1 / 2;
+            background: var(--parchment);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--ink) var(--parchment);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 2px 0 5px var(--shadow);
+            transition: transform var(--animation-speed) ease;
+        }
+
+        /* Main Game View */
+        #main-view {
+            grid-column: 2 / 3;
+            background: var(--ink);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-scene {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-origin: center;
+            transition: transform var(--animation-speed) ease-out;
+        }
+
+        /* Parchment Panel */
+        #parchment {
+            grid-column: 3 / 4;
+            background: var(--parchment);
+            padding: 1rem;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            box-shadow: -2px 0 5px var(--shadow);
+            transition: transform var(--animation-speed) ease;
+        }
+
+        /* Controls */
+        #controls {
+            grid-column: 1 / -1;
+            background: var(--ink);
+            color: var(--parchment);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 -2px 5px var(--shadow);
+        }
+
+        /* Interactive Elements */
+        .character {
+            padding: 0.75rem;
+            margin: 0.25rem 0;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: all var(--animation-speed) ease;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .character:hover {
+            background: var(--gold);
+            color: var(--parchment);
+            transform: translateY(-2px);
+        }
+
+        .character.active {
+            background: var(--ink);
+            color: var(--parchment);
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+
+        /* Time Control */
+        #time-control {
+            position: relative;
+            width: 80%;
+            height: 20px;
+            background: var(--parchment);
+            border-radius: 10px;
+            cursor: pointer;
+            touch-action: none;
+            margin: 0 1rem;
+        }
+
+        #time-marker {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: var(--gold);
+            border-radius: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 2px 6px var(--shadow);
+            transition: left var(--animation-speed) ease, background var(--animation-speed) ease;
+        }
+
+        /* Game Elements */
+        .magical-effect {
+            position: absolute;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            will-change: transform, opacity;
+        }
+
+        .entity {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: var(--gold);
+            border-radius: 50%;
+            transform-origin: center;
+            will-change: transform;
+            cursor: pointer;
+            transition: transform var(--animation-speed) ease;
+        }
+
+        .entity:hover {
+            transform: scale(1.2);
+            background: var(--button-hover);
+        }
+
+        /* Parchment Text */
+        #prophecy-text {
+            font-size: 1rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            #game-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto auto;
+            }
+
+            #family-tree, #parchment {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                width: 80%;
+                max-width: 300px;
+                transform: translateX(-100%);
+                transition: transform var(--animation-speed) ease;
+                z-index: 90;
+                overflow-y: auto;
+            }
+
+            #parchment {
+                right: 0;
+                transform: translateX(100%);
+            }
+
+            .panel-visible {
+                transform: translateX(0) !important;
+            }
+
+            #main-view {
+                grid-column: 1 / -1;
+            }
+
+            #controls {
+                flex-wrap: wrap;
+            }
+
+            #time-control {
+                width: 100%;
+                margin: 1rem 0;
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes magicalSparkle {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(2) rotate(360deg); opacity: 0; }
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+
+        /* Touch Device Optimizations */
+        @media (hover: none) {
+            .character:hover {
+                transform: none;
+            }
+        }
+
+        /* Button Styles */
+        #controls button {
+            background: var(--gold);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            color: var(--ink);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background var(--animation-speed) ease, transform var(--animation-speed) ease;
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        #controls button:hover {
+            background: var(--button-hover);
+        }
+
+        #controls button:active {
+            background: var(--button-active);
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="header">
+            <h1>The Parchments of Macondo</h1>
+        </div>
+        <div id="family-tree" aria-label="Family Tree Panel">
+            <h2 class="sr-only">Family Tree</h2>
+            <!-- Characters will be dynamically populated here -->
+        </div>
+        <div id="main-view" aria-label="Main Game View">
+            <div id="game-scene" aria-label="Game Scene"></div>
+        </div>
+        <div id="parchment" aria-label="Parchment Panel">
+            <h2 class="sr-only">Parchment</h2>
+            <div id="prophecy-text">Select a character to view their prophecy.</div>
+        </div>
+        <div id="controls" aria-label="Game Controls">
+            <button id="toggle-tree" aria-label="Toggle Family Tree">📖</button>
+            <div id="time-control" aria-label="Time Control Slider">
+                <div id="time-marker" aria-hidden="true"></div>
+            </div>
+            <button id="toggle-parchment" aria-label="Toggle Parchments">📜</button>
+        </div>
+    </div>
+
+    <script>
+        class MacondoGame {
+            constructor() {
+                this.state = {
+                    currentGeneration: 0,
+                    timelinePosition: 0, // Range from 0 to 100
+                    entities: [],
+                    isPaused: false,
+                    lastTimestamp: 0,
+                    touchStartX: 0,
+                    touchStartY: 0
+                };
+
+                this.characters = [
+                    { name: "José Arcadio Buendía", generation: 1, abilities: ["founding", "alchemy"] },
+                    { name: "Úrsula Iguarán", generation: 1, abilities: ["longevity", "wisdom"] },
+                    { name: "José Arcadio", generation: 2, abilities: ["strength", "wanderlust"] },
+                    { name: "Colonel Aureliano", generation: 2, abilities: ["prophecy", "metallurgy"] },
+                    { name: "Amaranta", generation: 2, abilities: ["weaving", "memory"] },
+                    { name: "Arcadio", generation: 3, abilities: ["teaching", "power"] },
+                    { name: "Aureliano José", generation: 3, abilities: ["warfare", "love"] }
+                ];
+
+                this.prophecies = new Map();
+                this.initProphecies();
+                this.init();
+                this.setupEventListeners();
+            }
+
+            initProphecies() {
+                this.characters.forEach(char => {
+                    this.prophecies.set(char.name, {
+                        text: `The destiny of ${char.name} intertwines with Macondo's fate...`,
+                        revealed: false
+                    });
+                });
+            }
+
+            init() {
+                this.populateFamilyTree();
+                this.initTimeControl();
+                this.initGameScene();
+                this.initParchmentEffects();
+                this.setupMobileControls();
+                this.startGameLoop();
+            }
+
+            setupEventListeners() {
+                window.addEventListener('resize', this.handleResize.bind(this));
+                document.addEventListener('visibilitychange', () => {
+                    this.state.isPaused = document.hidden;
+                });
+
+                // Touch events
+                const gameScene = document.getElementById('game-scene');
+                gameScene.addEventListener('touchstart', this.handleTouchStart.bind(this));
+                gameScene.addEventListener('touchmove', this.handleTouchMove.bind(this));
+                gameScene.addEventListener('touchend', this.handleTouchEnd.bind(this));
+
+                // Prevent default touch behaviors
+                document.addEventListener('touchmove', (e) => {
+                    if (e.target.closest('#game-scene')) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+            }
+
+            handleResize() {
+                this.updateLayout();
+                this.renderGameScene();
+            }
+
+            handleTouchStart(e) {
+                const touch = e.touches[0];
+                this.state.touchStartX = touch.clientX;
+                this.state.touchStartY = touch.clientY;
+            }
+
+            handleTouchMove(e) {
+                if (this.state.isPaused) return;
+
+                const touch = e.touches[0];
+                const deltaX = touch.clientX - this.state.touchStartX;
+                const deltaY = touch.clientY - this.state.touchStartY;
+
+                this.createMagicalEffect(touch.clientX, touch.clientY, Math.hypot(deltaX, deltaY));
+            }
+
+            handleTouchEnd() {
+                // Handle touch end interactions if needed
+            }
+
+            setupMobileControls() {
+                const toggleTree = document.getElementById('toggle-tree');
+                const toggleParchment = document.getElementById('toggle-parchment');
+                const familyTree = document.getElementById('family-tree');
+                const parchment = document.getElementById('parchment');
+
+                toggleTree.addEventListener('click', () => {
+                    familyTree.classList.toggle('panel-visible');
+                    if (parchment.classList.contains('panel-visible')) {
+                        parchment.classList.remove('panel-visible');
+                    }
+                });
+
+                toggleParchment.addEventListener('click', () => {
+                    parchment.classList.toggle('panel-visible');
+                    if (familyTree.classList.contains('panel-visible')) {
+                        familyTree.classList.remove('panel-visible');
+                    }
+                });
+
+                // Close panels when clicking main view
+                document.getElementById('main-view').addEventListener('click', () => {
+                    familyTree.classList.remove('panel-visible');
+                    parchment.classList.remove('panel-visible');
+                });
+            }
+
+            startGameLoop(timestamp = 0) {
+                if (this.state.isPaused) {
+                    this.state.lastTimestamp = timestamp;
+                    requestAnimationFrame(this.startGameLoop.bind(this));
+                    return;
+                }
+
+                const deltaTime = timestamp - this.state.lastTimestamp;
+                this.update(deltaTime);
+                this.render();
+
+                this.state.lastTimestamp = timestamp;
+                requestAnimationFrame(this.startGameLoop.bind(this));
+            }
+
+            update(deltaTime) {
+                this.updateEntities(deltaTime);
+                this.checkCollisions();
+                this.updateMagicalEffects();
+                this.updateTimeControl();
+            }
+
+            render() {
+                this.renderGameScene();
+                this.renderEntities();
+                this.renderUI();
+            }
+
+            populateFamilyTree() {
+                const familyTree = document.getElementById('family-tree');
+                this.characters.forEach(char => {
+                    const charDiv = document.createElement('div');
+                    charDiv.className = 'character';
+                    charDiv.textContent = `${char.name} (Gen ${char.generation})`;
+                    charDiv.setAttribute('tabindex', '0');
+                    charDiv.setAttribute('role', 'button');
+                    charDiv.setAttribute('aria-pressed', 'false');
+                    charDiv.addEventListener('click', () => this.selectCharacter(char.name, charDiv));
+                    charDiv.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            this.selectCharacter(char.name, charDiv);
+                        }
+                    });
+                    familyTree.appendChild(charDiv);
+                });
+            }
+
+            selectCharacter(name, element) {
+                // Deselect all characters
+                const allCharacters = document.querySelectorAll('.character');
+                allCharacters.forEach(char => {
+                    char.classList.remove('active');
+                    char.setAttribute('aria-pressed', 'false');
+                });
+
+                // Select the clicked character
+                element.classList.add('active');
+                element.setAttribute('aria-pressed', 'true');
+
+                // Display prophecy
+                const prophecy = this.prophecies.get(name);
+                const prophecyText = document.getElementById('prophecy-text');
+                prophecyText.textContent = prophecy.text;
+                prophecy.revealed = true;
+
+                // Optionally, highlight entity in the game scene
+                this.highlightEntity(name);
+            }
+
+            highlightEntity(name) {
+                // Remove existing highlights
+                const entities = document.querySelectorAll('.entity');
+                entities.forEach(entity => {
+                    entity.style.border = 'none';
+                });
+
+                // Highlight the selected entity
+                const entity = document.querySelector(`.entity[data-name="${name}"]`);
+                if (entity) {
+                    entity.style.border = `2px solid var(--gold)`;
+                }
+            }
+
+            initTimeControl() {
+                const timeControl = document.getElementById('time-control');
+                const timeMarker = document.getElementById('time-marker');
+
+                const updateMarkerPosition = (x) => {
+                    const rect = timeControl.getBoundingClientRect();
+                    let newLeft = x - rect.left;
+                    newLeft = Math.max(0, Math.min(newLeft, rect.width));
+                    const percentage = (newLeft / rect.width) * 100;
+                    this.state.timelinePosition = percentage;
+                    timeMarker.style.left = `${percentage}%`;
+                    this.updateBackgroundBasedOnTime();
+                };
+
+                timeControl.addEventListener('mousedown', (e) => {
+                    updateMarkerPosition(e.clientX);
+                    const onMouseMove = (event) => {
+                        updateMarkerPosition(event.clientX);
+                    };
+                    const onMouseUp = () => {
+                        window.removeEventListener('mousemove', onMouseMove);
+                        window.removeEventListener('mouseup', onMouseUp);
+                    };
+                    window.addEventListener('mousemove', onMouseMove);
+                    window.addEventListener('mouseup', onMouseUp);
+                });
+
+                // Touch events for mobile
+                timeControl.addEventListener('touchstart', (e) => {
+                    const touch = e.touches[0];
+                    updateMarkerPosition(touch.clientX);
+                    const onTouchMove = (event) => {
+                        const touchMove = event.touches[0];
+                        updateMarkerPosition(touchMove.clientX);
+                    };
+                    const onTouchEnd = () => {
+                        window.removeEventListener('touchmove', onTouchMove);
+                        window.removeEventListener('touchend', onTouchEnd);
+                    };
+                    window.addEventListener('touchmove', onTouchMove);
+                    window.addEventListener('touchend', onTouchEnd);
+                });
+            }
+
+            updateTimeControl() {
+                // Example: Change game state based on timelinePosition
+                // For simplicity, we can simulate generation changes
+                const position = this.state.timelinePosition;
+                const generation = Math.min(Math.floor(position / (100 / this.characters.length)) + 1, this.characters.length);
+                if (generation !== this.state.currentGeneration) {
+                    this.state.currentGeneration = generation;
+                    this.spawnEntitiesForGeneration(generation);
+                }
+            }
+
+            spawnEntitiesForGeneration(generation) {
+                // Clear existing entities
+                this.state.entities = [];
+                const scene = document.getElementById('game-scene');
+                scene.innerHTML = ''; // Clear previous entities
+
+                // Spawn characters of the current generation
+                this.characters.filter(char => char.generation === generation).forEach(char => {
+                    const entity = this.createEntity(char.name);
+                    this.state.entities.push(entity);
+                });
+            }
+
+            createEntity(name) {
+                const scene = document.getElementById('game-scene');
+                const entityDiv = document.createElement('div');
+                entityDiv.className = 'entity';
+                entityDiv.setAttribute('data-name', name);
+                entityDiv.setAttribute('aria-label', name);
+                entityDiv.setAttribute('role', 'button');
+                entityDiv.setAttribute('tabindex', '0');
+
+                // Position entity randomly within the scene
+                const x = Math.random() * (scene.clientWidth - 50) + 25;
+                const y = Math.random() * (scene.clientHeight - 50) + 25;
+                entityDiv.style.left = `${x}px`;
+                entityDiv.style.top = `${y}px`;
+
+                // Add event listeners
+                entityDiv.addEventListener('click', () => {
+                    const character = this.characters.find(char => char.name === name);
+                    const familyTree = document.getElementById('family-tree');
+                    const characterDivs = familyTree.querySelectorAll('.character');
+                    characterDivs.forEach(div => {
+                        if (div.textContent.startsWith(name)) {
+                            div.click();
+                        }
+                    });
+                });
+
+                entityDiv.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        const character = this.characters.find(char => char.name === name);
+                        const familyTree = document.getElementById('family-tree');
+                        const characterDivs = familyTree.querySelectorAll('.character');
+                        characterDivs.forEach(div => {
+                            if (div.textContent.startsWith(name)) {
+                                div.click();
+                            }
+                        });
+                    }
+                });
+
+                // Append to scene
+                scene.appendChild(entityDiv);
+
+                // Return entity object
+                return {
+                    name: name,
+                    element: entityDiv,
+                    velocity: {
+                        x: (Math.random() * 2 - 1) * 0.05,
+                        y: (Math.random() * 2 - 1) * 0.05
+                    }
+                };
+            }
+
+            initGameScene() {
+                // Initial spawn based on the starting timeline position
+                this.spawnEntitiesForGeneration(this.state.currentGeneration);
+            }
+
+            updateEntities(deltaTime) {
+                this.state.entities.forEach(entity => {
+                    const el = entity.element;
+                    let x = parseFloat(el.style.left);
+                    let y = parseFloat(el.style.top);
+
+                    x += entity.velocity.x * deltaTime;
+                    y += entity.velocity.y * deltaTime;
+
+                    // Boundary checks
+                    if (x <= 25 || x >= el.parentElement.clientWidth - 25) {
+                        entity.velocity.x *= -1;
+                    }
+                    if (y <= 25 || y >= el.parentElement.clientHeight - 25) {
+                        entity.velocity.y *= -1;
+                    }
+
+                    el.style.left = `${x}px`;
+                    el.style.top = `${y}px`;
+                });
+            }
+
+            checkCollisions() {
+                // Simple collision detection
+                for (let i = 0; i < this.state.entities.length; i++) {
+                    for (let j = i + 1; j < this.state.entities.length; j++) {
+                        const entA = this.state.entities[i];
+                        const entB = this.state.entities[j];
+                        const dx = parseFloat(entA.element.style.left) - parseFloat(entB.element.style.left);
+                        const dy = parseFloat(entA.element.style.top) - parseFloat(entB.element.style.top);
+                        const distance = Math.hypot(dx, dy);
+                        if (distance < 50) { // Assuming each entity has a radius of 25px
+                            this.createMagicalEffect((parseFloat(entA.element.style.left) + parseFloat(entB.element.style.left)) / 2,
+                                                    (parseFloat(entA.element.style.top) + parseFloat(entB.element.style.top)) / 2, 1.5);
+                        }
+                    }
+                }
+            }
+
+            updateMagicalEffects() {
+                // Additional updates to magical effects if needed
+            }
+
+            renderGameScene() {
+                const scene = document.getElementById('game-scene');
+                const timeHue = (this.state.timelinePosition * 3.6) % 360;
+                scene.style.backgroundColor = `hsl(${timeHue}, 30%, 20%)`;
+            }
+
+            renderEntities() {
+                // Additional rendering logic if needed
+            }
+
+            renderUI() {
+                // Update UI elements based on game state if needed
+            }
+
+            createMagicalEffect(x, y, intensity = 1) {
+                const scene = document.getElementById('game-scene');
+                const effect = document.createElement('div');
+                effect.className = 'magical-effect';
+                effect.style.left = `${x}px`;
+                effect.style.top = `${y}px`;
+                
+                const size = 50 + (intensity * 20);
+                effect.style.width = `${size}px`;
+                effect.style.height = `${size}px`;
+                
+                const hue = (this.state.timelinePosition * 3.6) % 360;
+                effect.style.background = `radial-gradient(circle, 
+                    hsla(${hue}, 70%, 50%, 0.8),
+                    transparent)`;
+
+                scene.appendChild(effect);
+
+                effect.animate([
+                    { transform: 'scale(0)', opacity: 1 },
+                    { transform: 'scale(2)', opacity: 0 }
+                ], {
+                    duration: 1000,
+                    easing: 'ease-out'
+                }).onfinish = () => effect.remove();
+            }
+
+            initParchmentEffects() {
+                // Implement any initial parchment animations or effects if needed
+            }
+
+            updateBackgroundBasedOnTime() {
+                // Change background or other elements based on the timeline position
+                // For example, adjust lighting or add thematic elements
+            }
+        }
+
+        // Initialize game when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            const game = new MacondoGame();
+        });
+
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }).catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+    </script>
+
+    <!-- Service Worker Script (sw.js) -->
+    <script>
+        // Inline Service Worker for demonstration purposes
+        // In production, it's better to have a separate sw.js file
+        if ('serviceWorker' in navigator) {
+            const swScript = `
+                const CACHE_NAME = 'macondo-cache-v1';
+                const urlsToCache = [
+                    '/',
+                    // Add other assets like images, stylesheets, etc.
+                ];
+
+                self.addEventListener('install', event => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                console.log('Opened cache');
+                                return cache.addAll(urlsToCache);
+                            })
+                    );
+                });
+
+                self.addEventListener('fetch', event => {
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(response => {
+                                if (response) {
+                                    return response;
+                                }
+                                return fetch(event.request);
+                            })
+                    );
+                });
+
+                self.addEventListener('activate', event => {
+                    const cacheWhitelist = [CACHE_NAME];
+                    event.waitUntil(
+                        caches.keys().then(cacheNames => {
+                            return Promise.all(
+                                cacheNames.map(cacheName => {
+                                    if (!cacheWhitelist.includes(cacheName)) {
+                                        return caches.delete(cacheName);
+                                    }
+                                })
+                            );
+                        })
+                    );
+                });
+            `;
+            const blob = new Blob([swScript], { type: 'application/javascript' });
+            const swURL = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swURL).then(reg => {
+                console.log('Inline ServiceWorker registered.');
+            }).catch(err => {
+                console.log('Inline ServiceWorker registration failed:', err);
+            });
+        }
+    </script>
+</body>
+</html>
