@@ -5,7 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2c1810">
     <title>The Parchments of Macondo</title>
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIlRoZSBQYXJjaG1lbnRzIG9mIE1hY29uZG8iLAogICJzaG9ydF9uYW1lIjogIk1hY29uZG8iLAogICJ0aGVtZV9jb2xvciI6ICIjMmMxODEwIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMWExYTFhIiwKICAiZGlzcGxheSI6ICJmdWxsc2NyZWVuIiwKICAib3JpZW50YXRpb24iOiAicG9ydHJhaXQiCn0=">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- External Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel&family=Roboto&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-pvE/OYhWgE5qFwdGiA1kSP+VtAvncmKIFW5PT1f+Pj0NAdl91UeoE6iDjaVxJftSWxXrKvfAT6lGjKH38u0aVw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- GSAP for Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" integrity="sha512-wnbK3zYPn17uH/jUFx5JTw3Ym3SjY4lwk59ISZQoMVHvVYvSe6FnhDcnLK8dkVFAZm/yQEV6rY1u+INr3yzuEg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <!-- Redux for State Management -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.2.1/redux.min.js" integrity="sha512-1hE5r9hd+Idl0CKCIJl4pjjLpsY5lMyNkxTkL+3vJuHfFfaYDAvnMluB3eF4uDNpCCnjr3nYpID6YQAzMHEubQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
     <style>
         /* CSS Reset and Variables */
@@ -20,6 +32,8 @@
             --background-color: #1a1a1a;
             --button-hover: #d4af37;
             --button-active: #bf9b30;
+            --font-title: 'Cinzel', serif;
+            --font-body: 'Roboto', sans-serif;
         }
 
         * {
@@ -30,13 +44,6 @@
             user-select: none;
         }
 
-        /* Typography */
-        @font-face {
-            font-family: 'MacondoFont';
-            src: local('Georgia');
-            font-display: swap;
-        }
-
         /* Base Styles */
         html {
             font-size: 16px;
@@ -44,7 +51,7 @@
         }
 
         body {
-            font-family: 'MacondoFont', Georgia, serif;
+            font-family: var(--font-body);
             background: var(--background-color);
             color: var(--text-primary);
             min-height: 100vh;
@@ -76,8 +83,10 @@
         }
 
         #header h1 {
+            font-family: var(--font-title);
             font-size: clamp(1.5rem, 4vw, 2.5rem);
             font-style: italic;
+            letter-spacing: 2px;
         }
 
         /* Family Tree Panel */
@@ -112,6 +121,8 @@
             position: relative;
             transform-origin: center;
             transition: transform var(--animation-speed) ease-out;
+            background: url('https://i.imgur.com/8Km9tLL.jpg') no-repeat center center;
+            background-size: cover;
         }
 
         /* Parchment Panel */
@@ -148,11 +159,14 @@
             cursor: pointer;
             transition: all var(--animation-speed) ease;
             box-shadow: 0 2px 4px var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .character:hover {
             background: var(--gold);
-            color: var(--parchment);
+            color: var(--ink);
             transform: translateY(-2px);
         }
 
@@ -196,14 +210,19 @@
 
         .entity {
             position: absolute;
-            width: 40px;
-            height: 40px;
+            width: 60px;
+            height: 60px;
             background: var(--gold);
             border-radius: 50%;
             transform-origin: center;
             will-change: transform;
             cursor: pointer;
             transition: transform var(--animation-speed) ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: var(--ink);
         }
 
         .entity:hover {
@@ -302,6 +321,9 @@
             cursor: pointer;
             transition: background var(--animation-speed) ease, transform var(--animation-speed) ease;
             box-shadow: 0 2px 4px var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         #controls button:hover {
@@ -312,6 +334,12 @@
             background: var(--button-active);
             transform: scale(0.98);
         }
+
+        /* Icon Styling */
+        .icon {
+            font-size: 1.2rem;
+        }
+
     </style>
 </head>
 <body>
@@ -331,27 +359,79 @@
             <div id="prophecy-text">Select a character to view their prophecy.</div>
         </div>
         <div id="controls" aria-label="Game Controls">
-            <button id="toggle-tree" aria-label="Toggle Family Tree">📖</button>
+            <button id="toggle-tree" aria-label="Toggle Family Tree"><i class="fas fa-tree icon"></i> Family Tree</button>
             <div id="time-control" aria-label="Time Control Slider">
                 <div id="time-marker" aria-hidden="true"></div>
             </div>
-            <button id="toggle-parchment" aria-label="Toggle Parchments">📜</button>
+            <button id="toggle-parchment" aria-label="Toggle Parchments"><i class="fas fa-scroll icon"></i> Parchments</button>
         </div>
     </div>
 
+    <!-- Background Music -->
+    <audio id="background-music" src="https://www.bensound.com/bensound-music/bensound-epic.mp3" loop></audio>
+
+    <!-- Sound Effects -->
+    <audio id="click-sound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
+    <audio id="collision-sound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+
     <script>
+        // Initialize Redux Store
+        const { createStore } = Redux;
+
+        // Initial State
+        const initialState = {
+            currentGeneration: 0,
+            timelinePosition: 0, // Range from 0 to 100
+            entities: [],
+            isPaused: false,
+            selectedCharacter: null
+        };
+
+        // Action Types
+        const SET_GENERATION = 'SET_GENERATION';
+        const SET_TIMELINE_POSITION = 'SET_TIMELINE_POSITION';
+        const TOGGLE_PAUSE = 'TOGGLE_PAUSE';
+        const SELECT_CHARACTER = 'SELECT_CHARACTER';
+        const ADD_ENTITY = 'ADD_ENTITY';
+        const REMOVE_ENTITY = 'REMOVE_ENTITY';
+        const CLEAR_ENTITIES = 'CLEAR_ENTITIES';
+
+        // Action Creators
+        const setGeneration = (generation) => ({ type: SET_GENERATION, generation });
+        const setTimelinePosition = (position) => ({ type: SET_TIMELINE_POSITION, position });
+        const togglePause = () => ({ type: TOGGLE_PAUSE });
+        const selectCharacter = (character) => ({ type: SELECT_CHARACTER, character });
+        const addEntity = (entity) => ({ type: ADD_ENTITY, entity });
+        const removeEntity = (entityId) => ({ type: REMOVE_ENTITY, entityId });
+        const clearEntities = () => ({ type: CLEAR_ENTITIES });
+
+        // Reducer
+        const reducer = (state = initialState, action) => {
+            switch(action.type) {
+                case SET_GENERATION:
+                    return { ...state, currentGeneration: action.generation };
+                case SET_TIMELINE_POSITION:
+                    return { ...state, timelinePosition: action.position };
+                case TOGGLE_PAUSE:
+                    return { ...state, isPaused: !state.isPaused };
+                case SELECT_CHARACTER:
+                    return { ...state, selectedCharacter: action.character };
+                case ADD_ENTITY:
+                    return { ...state, entities: [...state.entities, action.entity] };
+                case REMOVE_ENTITY:
+                    return { ...state, entities: state.entities.filter(e => e.id !== action.entityId) };
+                case CLEAR_ENTITIES:
+                    return { ...state, entities: [] };
+                default:
+                    return state;
+            }
+        };
+
+        // Create Store
+        const store = createStore(reducer);
+
         class MacondoGame {
             constructor() {
-                this.state = {
-                    currentGeneration: 0,
-                    timelinePosition: 0, // Range from 0 to 100
-                    entities: [],
-                    isPaused: false,
-                    lastTimestamp: 0,
-                    touchStartX: 0,
-                    touchStartY: 0
-                };
-
                 this.characters = [
                     { name: "José Arcadio Buendía", generation: 1, abilities: ["founding", "alchemy"] },
                     { name: "Úrsula Iguarán", generation: 1, abilities: ["longevity", "wisdom"] },
@@ -366,6 +446,9 @@
                 this.initProphecies();
                 this.init();
                 this.setupEventListeners();
+                this.setupStoreListener();
+                this.initSounds();
+                this.playBackgroundMusic();
             }
 
             initProphecies() {
@@ -389,7 +472,7 @@
             setupEventListeners() {
                 window.addEventListener('resize', this.handleResize.bind(this));
                 document.addEventListener('visibilitychange', () => {
-                    this.state.isPaused = document.hidden;
+                    store.dispatch(togglePause());
                 });
 
                 // Touch events
@@ -413,16 +496,14 @@
 
             handleTouchStart(e) {
                 const touch = e.touches[0];
-                this.state.touchStartX = touch.clientX;
-                this.state.touchStartY = touch.clientY;
+                this.touchStartX = touch.clientX;
+                this.touchStartY = touch.clientY;
             }
 
             handleTouchMove(e) {
-                if (this.state.isPaused) return;
-
                 const touch = e.touches[0];
-                const deltaX = touch.clientX - this.state.touchStartX;
-                const deltaY = touch.clientY - this.state.touchStartY;
+                const deltaX = touch.clientX - this.touchStartX;
+                const deltaY = touch.clientY - this.touchStartY;
 
                 this.createMagicalEffect(touch.clientX, touch.clientY, Math.hypot(deltaX, deltaY));
             }
@@ -442,6 +523,7 @@
                     if (parchment.classList.contains('panel-visible')) {
                         parchment.classList.remove('panel-visible');
                     }
+                    this.playSound('click-sound');
                 });
 
                 toggleParchment.addEventListener('click', () => {
@@ -449,6 +531,7 @@
                     if (familyTree.classList.contains('panel-visible')) {
                         familyTree.classList.remove('panel-visible');
                     }
+                    this.playSound('click-sound');
                 });
 
                 // Close panels when clicking main view
@@ -458,18 +541,45 @@
                 });
             }
 
+            setupStoreListener() {
+                store.subscribe(() => {
+                    const state = store.getState();
+                    this.updateUI(state);
+                });
+            }
+
+            initSounds() {
+                this.backgroundMusic = document.getElementById('background-music');
+                this.clickSound = document.getElementById('click-sound');
+                this.collisionSound = document.getElementById('collision-sound');
+            }
+
+            playBackgroundMusic() {
+                this.backgroundMusic.volume = 0.3;
+                this.backgroundMusic.play().catch(err => {
+                    console.log('Autoplay prevented:', err);
+                });
+            }
+
+            playSound(soundId) {
+                const sound = document.getElementById(soundId);
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play();
+                }
+            }
+
             startGameLoop(timestamp = 0) {
-                if (this.state.isPaused) {
-                    this.state.lastTimestamp = timestamp;
+                if (store.getState().isPaused) {
                     requestAnimationFrame(this.startGameLoop.bind(this));
                     return;
                 }
 
-                const deltaTime = timestamp - this.state.lastTimestamp;
+                const deltaTime = timestamp - (this.lastTimestamp || timestamp);
                 this.update(deltaTime);
                 this.render();
 
-                this.state.lastTimestamp = timestamp;
+                this.lastTimestamp = timestamp;
                 requestAnimationFrame(this.startGameLoop.bind(this));
             }
 
@@ -491,7 +601,7 @@
                 this.characters.forEach(char => {
                     const charDiv = document.createElement('div');
                     charDiv.className = 'character';
-                    charDiv.textContent = `${char.name} (Gen ${char.generation})`;
+                    charDiv.innerHTML = `<i class="fas fa-user icon"></i> ${char.name} (Gen ${char.generation})`;
                     charDiv.setAttribute('tabindex', '0');
                     charDiv.setAttribute('role', 'button');
                     charDiv.setAttribute('aria-pressed', 'false');
@@ -517,13 +627,20 @@
                 element.classList.add('active');
                 element.setAttribute('aria-pressed', 'true');
 
+                // Update selected character in state
+                const selectedChar = this.characters.find(char => char.name === name);
+                store.dispatch(selectCharacter(selectedChar));
+
+                // Play click sound
+                this.playSound('click-sound');
+
                 // Display prophecy
                 const prophecy = this.prophecies.get(name);
                 const prophecyText = document.getElementById('prophecy-text');
                 prophecyText.textContent = prophecy.text;
                 prophecy.revealed = true;
 
-                // Optionally, highlight entity in the game scene
+                // Highlight entity in the game scene
                 this.highlightEntity(name);
             }
 
@@ -550,9 +667,7 @@
                     let newLeft = x - rect.left;
                     newLeft = Math.max(0, Math.min(newLeft, rect.width));
                     const percentage = (newLeft / rect.width) * 100;
-                    this.state.timelinePosition = percentage;
-                    timeMarker.style.left = `${percentage}%`;
-                    this.updateBackgroundBasedOnTime();
+                    store.dispatch(setTimelinePosition(percentage));
                 };
 
                 timeControl.addEventListener('mousedown', (e) => {
@@ -586,19 +701,19 @@
             }
 
             updateTimeControl() {
-                // Example: Change game state based on timelinePosition
-                // For simplicity, we can simulate generation changes
-                const position = this.state.timelinePosition;
+                const state = store.getState();
+                const position = state.timelinePosition;
                 const generation = Math.min(Math.floor(position / (100 / this.characters.length)) + 1, this.characters.length);
                 if (generation !== this.state.currentGeneration) {
                     this.state.currentGeneration = generation;
+                    store.dispatch(setGeneration(generation));
                     this.spawnEntitiesForGeneration(generation);
                 }
             }
 
             spawnEntitiesForGeneration(generation) {
                 // Clear existing entities
-                this.state.entities = [];
+                store.dispatch(clearEntities());
                 const scene = document.getElementById('game-scene');
                 scene.innerHTML = ''; // Clear previous entities
 
@@ -613,14 +728,15 @@
                 const scene = document.getElementById('game-scene');
                 const entityDiv = document.createElement('div');
                 entityDiv.className = 'entity';
+                entityDiv.innerHTML = `<i class="fas fa-user"></i>`;
                 entityDiv.setAttribute('data-name', name);
                 entityDiv.setAttribute('aria-label', name);
                 entityDiv.setAttribute('role', 'button');
                 entityDiv.setAttribute('tabindex', '0');
 
                 // Position entity randomly within the scene
-                const x = Math.random() * (scene.clientWidth - 50) + 25;
-                const y = Math.random() * (scene.clientHeight - 50) + 25;
+                const x = Math.random() * (scene.clientWidth - 80) + 40;
+                const y = Math.random() * (scene.clientHeight - 80) + 40;
                 entityDiv.style.left = `${x}px`;
                 entityDiv.style.top = `${y}px`;
 
@@ -652,8 +768,8 @@
                 // Append to scene
                 scene.appendChild(entityDiv);
 
-                // Return entity object
-                return {
+                // Create entity object
+                const entity = {
                     name: name,
                     element: entityDiv,
                     velocity: {
@@ -661,11 +777,16 @@
                         y: (Math.random() * 2 - 1) * 0.05
                     }
                 };
+
+                // Add entity to store
+                store.dispatch(addEntity(entity));
+
+                return entity;
             }
 
             initGameScene() {
                 // Initial spawn based on the starting timeline position
-                this.spawnEntitiesForGeneration(this.state.currentGeneration);
+                this.spawnEntitiesForGeneration(this.state.currentGeneration || 1);
             }
 
             updateEntities(deltaTime) {
@@ -678,15 +799,20 @@
                     y += entity.velocity.y * deltaTime;
 
                     // Boundary checks
-                    if (x <= 25 || x >= el.parentElement.clientWidth - 25) {
+                    if (x <= 40 || x >= el.parentElement.clientWidth - 40) {
                         entity.velocity.x *= -1;
+                        this.playSound('collision-sound');
                     }
-                    if (y <= 25 || y >= el.parentElement.clientHeight - 25) {
+                    if (y <= 40 || y >= el.parentElement.clientHeight - 40) {
                         entity.velocity.y *= -1;
+                        this.playSound('collision-sound');
                     }
 
                     el.style.left = `${x}px`;
                     el.style.top = `${y}px`;
+
+                    // GSAP Animation for smooth movement
+                    gsap.to(el, { x: x - el.parentElement.offsetLeft, y: y - el.parentElement.offsetTop, duration: 0.1 });
                 });
             }
 
@@ -699,9 +825,13 @@
                         const dx = parseFloat(entA.element.style.left) - parseFloat(entB.element.style.left);
                         const dy = parseFloat(entA.element.style.top) - parseFloat(entB.element.style.top);
                         const distance = Math.hypot(dx, dy);
-                        if (distance < 50) { // Assuming each entity has a radius of 25px
-                            this.createMagicalEffect((parseFloat(entA.element.style.left) + parseFloat(entB.element.style.left)) / 2,
-                                                    (parseFloat(entA.element.style.top) + parseFloat(entB.element.style.top)) / 2, 1.5);
+                        if (distance < 60) { // Assuming each entity has a radius of 30px
+                            this.createMagicalEffect(
+                                (parseFloat(entA.element.style.left) + parseFloat(entB.element.style.left)) / 2,
+                                (parseFloat(entA.element.style.top) + parseFloat(entB.element.style.top)) / 2,
+                                1.5
+                            );
+                            this.playSound('collision-sound');
                         }
                     }
                 }
@@ -713,16 +843,28 @@
 
             renderGameScene() {
                 const scene = document.getElementById('game-scene');
-                const timeHue = (this.state.timelinePosition * 3.6) % 360;
-                scene.style.backgroundColor = `hsl(${timeHue}, 30%, 20%)`;
+                const state = store.getState();
+                const timeHue = (state.timelinePosition * 3.6) % 360;
+                gsap.to(scene, { backgroundColor: `hsl(${timeHue}, 30%, 20%)`, duration: 0.5 });
             }
 
             renderEntities() {
-                // Additional rendering logic if needed
+                // Entities are handled by Redux and updated in updateEntities
             }
 
             renderUI() {
-                // Update UI elements based on game state if needed
+                const state = store.getState();
+                const timeMarker = document.getElementById('time-marker');
+                timeMarker.style.left = `${state.timelinePosition}%`;
+
+                // Update background based on timeline position
+                this.updateBackgroundBasedOnTime(state.timelinePosition);
+            }
+
+            updateBackgroundBasedOnTime(position) {
+                // Change background or other elements based on the timeline position
+                // For example, adjust lighting or add thematic elements
+                // Currently handled in renderGameScene using GSAP
             }
 
             createMagicalEffect(x, y, intensity = 1) {
@@ -743,22 +885,14 @@
 
                 scene.appendChild(effect);
 
-                effect.animate([
-                    { transform: 'scale(0)', opacity: 1 },
-                    { transform: 'scale(2)', opacity: 0 }
-                ], {
-                    duration: 1000,
-                    easing: 'ease-out'
-                }).onfinish = () => effect.remove();
-            }
+                // GSAP Animation
+                gsap.fromTo(effect, 
+                    { scale: 0, opacity: 1 }, 
+                    { scale: 2, opacity: 0, duration: 1, ease: "power1.out", onComplete: () => effect.remove() }
+                );
 
-            initParchmentEffects() {
-                // Implement any initial parchment animations or effects if needed
-            }
-
-            updateBackgroundBasedOnTime() {
-                // Change background or other elements based on the timeline position
-                // For example, adjust lighting or add thematic elements
+                // Optionally, play a magical sound
+                // this.playSound('magical-sound');
             }
         }
 
@@ -789,6 +923,14 @@
                 const urlsToCache = [
                     '/',
                     // Add other assets like images, stylesheets, etc.
+                    'https://fonts.googleapis.com/css2?family=Cinzel&family=Roboto&display=swap',
+                    'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+                    'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/redux/4.2.1/redux.min.js',
+                    'https://www.bensound.com/bensound-music/bensound-epic.mp3',
+                    'https://www.soundjay.com/buttons/sounds/button-16.mp3',
+                    'https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3',
+                    'https://i.imgur.com/8Km9tLL.jpg'
                 ];
 
                 self.addEventListener('install', event => {
